@@ -1,0 +1,2 @@
+Bug Injector
+laCucaracha is a randomized "bug injector" which is used exclusively for training "Bug Hunting." It will keep record of the exact location where bugs were injected, and can be undid. However, for the sake of safety, is only recommended for use on "test code."
