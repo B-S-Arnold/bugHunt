@@ -28,10 +28,25 @@ class TypoBug(Bug):
             if re.fullmatch(r"(\".*?\"|'.*?'|\d+)", word):
                 return line
 
-        typo_type = random.choice(["replace", "insert"])
+        typo_type = random.choice(["swap", "omit", "duplicate", "replace", "insert"])
         
+        # swap mimics when keys are typed out of order 
+        if typo_type == "swap" and len(word) >= 2:
+            i = random.randint(0, len(word) - 2)
+            word = word[:i] + word[i+1] + word[i] + word[i+2:]
+
+        # omit mimics when keys are missed
+        elif typo_type == "omit":
+            i = random.randint(0, len(word) - 1)
+            word = word[:i] + word[i+1:]
+
+        # duplicate mimics when keys are (wrongly) struck more than once
+        elif typo_type == "duplicate":
+            i = random.randint(0, len(word) - 1)
+            word = word[:i] + word[i] + word[i:]
+
         # replace mimics when a key neighboring the intended key is struck
-        if typo_type == "replace":
+        elif typo_type == "replace":
             i = random.randint(0, len(word) - 1)
             c = word[i].lower()
             if c in KEYBOARD_NEIGHBORS:
