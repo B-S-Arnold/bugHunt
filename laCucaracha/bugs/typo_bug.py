@@ -2,6 +2,7 @@ import random
 import re
 from .base import Bug
 
+# Mapping of characters to neighboring keys (left and right neighbors for realistic typos)
 KEYBOARD_NEIGHBORS = {
     'a': 'qs', 'b': 'vn', 'c': 'xv', 'd': 'sf', 'e': 'wr', 'f': 'dg',
     'g': 'fh', 'h': 'gj', 'i': 'uo', 'j': 'hk', 'k': 'jl', 'l': 'k',
@@ -22,13 +23,15 @@ class TypoBug(Bug):
         if len(original_word) < 2 or original_word.startswith("#"):
             return line, None
 
+        # Optional: Toggle to True to avoid typos on strings and numeric literals
         if False:
             if re.fullmatch(r"(\".*?\"|'.*?'|\d+)", original_word):
                 return line, None
-
+        
         typo_type = random.choice(["swap", "omit", "duplicate", "replace", "insert"])
         modified_word = original_word  # start as original
 
+        # swap mimics when keys are typed out of order 
         if typo_type == "swap" and len(original_word) >= 2:
             i = random.randint(0, len(original_word) - 2)
             modified_word = (
@@ -38,14 +41,17 @@ class TypoBug(Bug):
                 original_word[i+2:]
             )
 
+        # omit mimics when keys are missed
         elif typo_type == "omit":
             i = random.randint(0, len(original_word) - 1)
             modified_word = original_word[:i] + original_word[i+1:]
 
+        # duplicate mimics when keys are (wrongly) struck more than once
         elif typo_type == "duplicate":
             i = random.randint(0, len(original_word) - 1)
             modified_word = original_word[:i] + original_word[i] + original_word[i:]
 
+        # replace mimics when a key neighboring the intended key is struck
         elif typo_type == "replace":
             i = random.randint(0, len(original_word) - 1)
             c = original_word[i].lower()
@@ -53,6 +59,7 @@ class TypoBug(Bug):
                 replacement = random.choice(KEYBOARD_NEIGHBORS[c])
                 modified_word = original_word[:i] + replacement + original_word[i+1:]
 
+        # insert mimics when a random character is struck
         elif typo_type == "insert":
             i = random.randint(0, len(original_word))
             char = random.choice("abcdefghijklmnopqrstuvwxyz")

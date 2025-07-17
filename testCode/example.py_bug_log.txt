@@ -1,0 +1,23 @@
+Original File: example.py
+Bug Log (2 bugs):
+
+- Line 7: "print(greet("World"))" → "print(greet("Word"))" (type: omit)
+- Line 4: "def" → "ddef" (type: duplicate)
+
+--- Original Code ---
+def greet(name):
+    return f"Hello, {name}!"
+
+def square(x):
+    return x * x
+
+print(greet("World"))
+
+--- Modified Code ---
+def greet(name):
+    return f"Hello, {name}!"
+
+ddef square(x):
+    return x * x
+
+print(greet("Word"))
