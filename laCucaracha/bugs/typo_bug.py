@@ -1,8 +1,7 @@
-from .base import Bug
 import random
 import re
+from .base import Bug
 
-# Mapping of characters to neighboring keys (left and right neighbors for realistic typos)
 KEYBOARD_NEIGHBORS = {
     'a': 'qs', 'b': 'vn', 'c': 'xv', 'd': 'sf', 'e': 'wr', 'f': 'dg',
     'g': 'fh', 'h': 'gj', 'i': 'uo', 'j': 'hk', 'k': 'jl', 'l': 'k',
@@ -12,52 +11,61 @@ KEYBOARD_NEIGHBORS = {
 }
 
 class TypoBug(Bug):
-    def inject(self, line: str) -> str:
+    def inject(self, line: str) -> tuple[str, dict | None]:
         words = line.split()
         if not words:
-            return line
+            return line, None
 
         idx = random.randint(0, len(words) - 1)
-        word = words[idx]
+        original_word = words[idx]
 
-        if len(word) < 2 or word.startswith("#"):
-            return line
+        if len(original_word) < 2 or original_word.startswith("#"):
+            return line, None
 
-        # Optional: Toggle to True to avoid typos on strings and numeric literals
         if False:
-            if re.fullmatch(r"(\".*?\"|'.*?'|\d+)", word):
-                return line
+            if re.fullmatch(r"(\".*?\"|'.*?'|\d+)", original_word):
+                return line, None
 
         typo_type = random.choice(["swap", "omit", "duplicate", "replace", "insert"])
-        
-        # swap mimics when keys are typed out of order 
-        if typo_type == "swap" and len(word) >= 2:
-            i = random.randint(0, len(word) - 2)
-            word = word[:i] + word[i+1] + word[i] + word[i+2:]
+        modified_word = original_word  # start as original
 
-        # omit mimics when keys are missed
+        if typo_type == "swap" and len(original_word) >= 2:
+            i = random.randint(0, len(original_word) - 2)
+            modified_word = (
+                original_word[:i] +
+                original_word[i+1] +
+                original_word[i] +
+                original_word[i+2:]
+            )
+
         elif typo_type == "omit":
-            i = random.randint(0, len(word) - 1)
-            word = word[:i] + word[i+1:]
+            i = random.randint(0, len(original_word) - 1)
+            modified_word = original_word[:i] + original_word[i+1:]
 
-        # duplicate mimics when keys are (wrongly) struck more than once
         elif typo_type == "duplicate":
-            i = random.randint(0, len(word) - 1)
-            word = word[:i] + word[i] + word[i:]
+            i = random.randint(0, len(original_word) - 1)
+            modified_word = original_word[:i] + original_word[i] + original_word[i:]
 
-        # replace mimics when a key neighboring the intended key is struck
         elif typo_type == "replace":
-            i = random.randint(0, len(word) - 1)
-            c = word[i].lower()
+            i = random.randint(0, len(original_word) - 1)
+            c = original_word[i].lower()
             if c in KEYBOARD_NEIGHBORS:
                 replacement = random.choice(KEYBOARD_NEIGHBORS[c])
-                word = word[:i] + replacement + word[i+1:]
+                modified_word = original_word[:i] + replacement + original_word[i+1:]
 
-        # insert mimics when a random character is struck
         elif typo_type == "insert":
-            i = random.randint(0, len(word))
+            i = random.randint(0, len(original_word))
             char = random.choice("abcdefghijklmnopqrstuvwxyz")
-            word = word[:i] + char + word[i:]
+            modified_word = original_word[:i] + char + original_word[i:]
 
-        words[idx] = word
-        return " ".join(words)
+        if modified_word != original_word:
+            words[idx] = modified_word
+            return " ".join(words), {
+                "bug_type": "typo",
+                "typo_type": typo_type,
+                "word_index": idx,
+                "original_word": original_word,
+                "modified_word": modified_word
+            }
+        else:
+            return line, None
