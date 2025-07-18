@@ -1,7 +1,7 @@
-def greet(name):
+fef greet(name):
     return f"Hello, {name}!"
 
-ddef square(x):
+def square(x):
     return x * x
 
-print(greet("Word"))
+print(greey("World"))

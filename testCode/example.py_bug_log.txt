@@ -1,8 +1,8 @@
 Original File: example.py
 Bug Log (2 bugs):
 
-- Line 7: "print(greet("World"))" → "print(greet("Word"))" (type: omit)
-- Line 4: "def" → "ddef" (type: duplicate)
+- Line 7: "print(greet("World"))" → "print(greey("World"))" (type: replace)
+- Line 1: "def" → "fef" (type: replace)
 
 --- Original Code ---
 def greet(name):
@@ -14,10 +14,10 @@ def square(x):
 print(greet("World"))
 
 --- Modified Code ---
-def greet(name):
+fef greet(name):
     return f"Hello, {name}!"
 
-ddef square(x):
+def square(x):
     return x * x
 
-print(greet("Word"))
+print(greey("World"))
