@@ -1,5 +1,6 @@
 import random
 import os
+import re
 from typing import Optional
 from bugs import *
 from config import BugInjectionConfig
@@ -9,12 +10,11 @@ class BugInjector:
         self.config = config
         if config.seed is not None:
             random.seed(config.seed)
-
         self.bug_classes = [
             TypoBug(),
             ImportBug(),
         ]
-        self.logs = []  # list of all injected bug info
+        self.logs = []  
 
     def inject_bugs(self, code: str, source_path: Optional[str] = None) -> str:
         lines = code.split("\n")
@@ -40,6 +40,14 @@ class BugInjector:
                     **diff
                 })
 
+                # Apply global replacements if needed (e.g. swap_all in ImportBug)
+                if "global_replace" in diff:
+                    for old, new in diff["global_replace"].items():
+                        for i, l in enumerate(lines):
+                            if i == line_no:
+                                continue  
+                            lines[i] = re.sub(rf"\b{re.escape(old)}\b", new, lines[i])
+
         modified_code = "\n".join(lines)
 
         if source_path:
@@ -59,7 +67,7 @@ class BugInjector:
             for log in sorted(self.logs, key=lambda l: l.get("line_number", float("inf"))):
                 line_no = log.get("line_number", "unknown")
                 bug_type = log.get("bug_type", "unknown")
-                bug_subtype = log.get("bug_subtype", "unknown")
+                bug_subtype = log.get("bug_subtype", "")
 
                 original = log.get("original_word") or log.get("original_line") or "N/A"
                 modified = log.get("modified_word") or log.get("modified_line") or "N/A"
@@ -70,4 +78,3 @@ class BugInjector:
             f.write(original_code)
             f.write("\n\n--- Modified Code ---\n")
             f.write(modified_code)
-

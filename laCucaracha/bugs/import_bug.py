@@ -10,17 +10,20 @@ class ImportBug(Bug):
         if not (stripped.startswith("import") or stripped.startswith("from")):
             return line, None
 
-        if random.random() >= 1.0:  # adjust probability if needed
+        if random.random() >= 1.0:  # or self.probability
             return line, None
 
+        bug_subtype = random.choice(["comment", "swap_one", "swap_all"])
+        modified_line = line
         original_line = line
-        modified_line = original_line
-        bug_subtype = random.choice(["comment", "swap"])
+
+        original_module = None
+        replacement_module = None
 
         if bug_subtype == "comment":
-            modified_line = f"# {original_line}"
+            modified_line = f"# {line}"
 
-        elif bug_subtype == "swap":
+        elif bug_subtype in ("swap_one", "swap_all"):
             match = re.match(r"^\s*import\s+(\w+)", stripped)
             if match:
                 original_module = match.group(1)
@@ -31,14 +34,28 @@ class ImportBug(Bug):
 
                 if alternatives:
                     replacement_module = random.choice(alternatives)
-                    modified_line = original_line.replace(original_module, replacement_module)
+                    modified_line = line.replace(original_module, replacement_module)
+                else:
+                    return line, None
+            else:
+                return line, None
 
         if modified_line != original_line:
-            return modified_line, {
+            bug_info = {
                 "bug_type": "import",
                 "bug_subtype": bug_subtype,
                 "original_line": original_line,
                 "modified_line": modified_line
             }
-        else:
-            return line, None
+
+            if bug_subtype in ("swap_one", "swap_all"):
+                bug_info["original_module"] = original_module
+                bug_info["replacement_module"] = replacement_module
+
+                if bug_subtype == "swap_all":
+                    # signal to BugInjector that this needs to be globally applied
+                    bug_info["global_replace"] = {original_module: replacement_module}
+
+            return modified_line, bug_info
+
+        return line, None
