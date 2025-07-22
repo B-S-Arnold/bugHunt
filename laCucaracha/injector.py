@@ -1,8 +1,7 @@
 import random
 import os
 from typing import Optional
-from bugs.typo_bug import TypoBug
-# from bugs.import_bug import ImportBug
+from bugs import *
 from config import BugInjectionConfig
 
 class BugInjector:
