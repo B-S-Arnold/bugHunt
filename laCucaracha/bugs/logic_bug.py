@@ -1,5 +1,4 @@
 import random
-import re
 from .base import Bug
 
 class LogicBug:

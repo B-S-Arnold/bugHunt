@@ -9,7 +9,10 @@ class BugInjector:
         self.config = config
         if config.seed is not None:
             random.seed(config.seed)
-        self.bug_classes = [TypoBug()] # add more bug subclasses
+        self.bug_classes = [
+            TypoBug(),
+            ImportBug(),
+            ]
         self.logs = []  # list of all injected bug info
 
     def inject_bugs(self, code: str, source_path: Optional[str] = None) -> str:
@@ -52,9 +55,20 @@ class BugInjector:
         with open(log_path, "w") as f:
             f.write(f"Original File: {base_name}\n")
             f.write(f"Bug Log ({len(self.logs)} bugs):\n\n")
-            for log in self.logs:
-                f.write(f"- Line {log['line_number']}: \"{log['original_word']}\" → \"{log['modified_word']}\" "
-                        f"(type: {log['typo_type']})\n")
+
+            # 🔽 Sort logs by line number before writing
+            for log in sorted(self.logs, key=lambda l: l.get("line_number", float("inf"))):
+                line_no = log.get("line_number", "unknown")
+                bug_type = log.get("bug_type", "unknown")
+
+                original = log.get("original_word") or log.get("original_line") or "N/A"
+                modified = log.get("modified_word") or log.get("modified_line") or "N/A"
+
+                extra_info = ""
+                if bug_type == "typo" and "typo_type" in log:
+                    extra_info = f"(typo_type: {log['typo_type']})"
+
+                f.write(f"- Line {line_no}: \"{original}\" → \"{modified}\" (type: {bug_type}) {extra_info}\n")
 
             f.write("\n--- Original Code ---\n")
             f.write(original_code)

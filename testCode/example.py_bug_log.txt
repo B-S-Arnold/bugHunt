@@ -1,10 +1,12 @@
 Original File: example.py
 Bug Log (2 bugs):
 
-- Line 7: "print(greet("World"))" → "print(greey("World"))" (type: replace)
-- Line 1: "def" → "fef" (type: replace)
+- Line 1: "import math" → "# import math" (type: import) 
+- Line 10: "print(square(5))" → "print(square()5)" (type: typo) (typo_type: swap)
 
 --- Original Code ---
+import math
+
 def greet(name):
     return f"Hello, {name}!"
 
@@ -12,12 +14,18 @@ def square(x):
     return x * x
 
 print(greet("World"))
+print(square(5))
+print(math.sqrt(16))
 
 --- Modified Code ---
-fef greet(name):
+# import math
+
+def greet(name):
     return f"Hello, {name}!"
 
 def square(x):
     return x * x
 
-print(greey("World"))
+print(greet("World"))
+print(square()5)
+print(math.sqrt(16))
