@@ -26,6 +26,8 @@ class BugInjector:
 
         chosen_lines = random.sample(valid_lines, min(total_bugs, len(valid_lines)))
 
+        empty_line_indices = set()
+        
         for line_no in chosen_lines:
             bug = random.choice(self.bug_classes)
             original_line = lines[line_no]
@@ -39,14 +41,18 @@ class BugInjector:
                     "modified_line": modified_line,
                     **diff
                 })
-
-                # Apply global replacements if needed (e.g. swap_all in ImportBug)
+        
+                if modified_line.strip() == "":
+                    empty_line_indices.add(line_no)
+                
                 if "global_replace" in diff:
                     for old, new in diff["global_replace"].items():
                         for i, l in enumerate(lines):
                             if i == line_no:
                                 continue  
                             lines[i] = re.sub(rf"\b{re.escape(old)}\b", new, lines[i])
+
+        lines = [line for idx, line in enumerate(lines) if idx not in empty_line_indices]
 
         modified_code = "\n".join(lines)
 

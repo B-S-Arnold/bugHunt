@@ -13,16 +13,22 @@ class ImportBug(Bug):
         if random.random() >= 1.0:  # or self.probability
             return line, None
 
-        bug_subtype = random.choice(["comment", "swap_one", "swap_all"])
+        bug_subtype = random.choice(["comment", "remove", "swap_one", "swap_all"])
         modified_line = line
         original_line = line
 
         original_module = None
         replacement_module = None
-
+        # comment mimics commenting out the import line
         if bug_subtype == "comment":
             modified_line = f"# {line}"
+            
+        # remove gets rid of the entire import line
+        elif bug_subtype == "remove":
+            modified_line = ""
 
+        # swap_one replaces the import statement with a random alternative
+        # swap_all mimics an incorrect import, replacing all instances
         elif bug_subtype in ("swap_one", "swap_all"):
             match = re.match(r"^\s*import\s+(\w+)", stripped)
             if match:
@@ -53,7 +59,6 @@ class ImportBug(Bug):
                 bug_info["replacement_module"] = replacement_module
 
                 if bug_subtype == "swap_all":
-                    # signal to BugInjector that this needs to be globally applied
                     bug_info["global_replace"] = {original_module: replacement_module}
 
             return modified_line, bug_info
