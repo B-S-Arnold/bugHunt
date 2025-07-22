@@ -69,7 +69,7 @@ class TypoBug(Bug):
             words[idx] = modified_word
             return " ".join(words), {
                 "bug_type": "typo",
-                "typo_type": typo_type,
+                "bug_subtype": typo_type,
                 "word_index": idx,
                 "original_word": original_word,
                 "modified_word": modified_word
