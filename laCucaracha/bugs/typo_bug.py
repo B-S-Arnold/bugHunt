@@ -32,7 +32,7 @@ class TypoBug(Bug):
             if re.fullmatch(r"(\".*?\"|'.*?'|\d+)", original_word):
                 return line, None
 
-        typo_type = random.choice(["swap", "omit", "duplicate", "replace", "insert"])
+        typo_type = random.choice(["swap", "omit", "duplicate", "replace", "insert_neighbor", "insert_random"])
         modified_word = original_word
 
         # swap: reorder two adjacent characters
@@ -55,7 +55,7 @@ class TypoBug(Bug):
             i = random.randint(0, len(original_word) - 1)
             modified_word = original_word[:i] + original_word[i] + original_word[i:]
 
-        # replace: use a neighboring keyboard key
+        # replace: use a neighboring keyboard key instead of the intended
         elif typo_type == "replace":
             i = random.randint(0, len(original_word) - 1)
             c = original_word[i].lower()
@@ -63,8 +63,25 @@ class TypoBug(Bug):
                 replacement = random.choice(KEYBOARD_NEIGHBORS[c])
                 modified_word = original_word[:i] + replacement + original_word[i+1:]
 
-        # insert: add a random character
-        elif typo_type == "insert":
+        # insert_neighbor: add a neighboring character
+        elif typo_type == "insert_neighbor":
+            valid_indices = [j for j, ch in enumerate(original_word) if ch.lower() in KEYBOARD_NEIGHBORS]
+            if not valid_indices:
+                return line, None
+
+            i = random.choice(valid_indices)
+            c = original_word[i].lower()
+            neighbors = KEYBOARD_NEIGHBORS[c]
+            char = random.choice(neighbors)
+
+            if random.random() < 0.5:
+                modified_word = original_word[:i] + char + original_word[i:]
+            else:
+                modified_word = original_word[:i+1] + char + original_word[i+1:]
+
+
+        # insert_random: add a random character
+        elif typo_type == "insert_random":
             i = random.randint(0, len(original_word))
             char = random.choice("abcdefghijklmnopqrstuvwxyz")
             modified_word = original_word[:i] + char + original_word[i:]
