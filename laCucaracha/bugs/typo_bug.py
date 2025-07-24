@@ -17,21 +17,25 @@ class TypoBug(Bug):
         if not words:
             return line, None
 
+        # Adjust probability as desired (e.g., 0.9 = 10% chance)
+        if random.random() >= 1.0:
+            return line, None
+
         idx = random.randint(0, len(words) - 1)
         original_word = words[idx]
 
         if len(original_word) < 2 or original_word.startswith("#"):
             return line, None
 
-        # Optional: Toggle to True to avoid typos on strings and numeric literals
+        # Optional: avoid modifying strings or numbers
         if False:
             if re.fullmatch(r"(\".*?\"|'.*?'|\d+)", original_word):
                 return line, None
-        
-        typo_type = random.choice(["swap", "omit", "duplicate", "replace", "insert"])
-        modified_word = original_word  # start as original
 
-        # swap mimics when keys are typed out of order 
+        typo_type = random.choice(["swap", "omit", "duplicate", "replace", "insert"])
+        modified_word = original_word
+
+        # swap: reorder two adjacent characters
         if typo_type == "swap" and len(original_word) >= 2:
             i = random.randint(0, len(original_word) - 2)
             modified_word = (
@@ -41,17 +45,17 @@ class TypoBug(Bug):
                 original_word[i+2:]
             )
 
-        # omit mimics when keys are missed
+        # omit: delete a character
         elif typo_type == "omit":
             i = random.randint(0, len(original_word) - 1)
             modified_word = original_word[:i] + original_word[i+1:]
 
-        # duplicate mimics when keys are (wrongly) struck more than once
+        # duplicate: repeat a character
         elif typo_type == "duplicate":
             i = random.randint(0, len(original_word) - 1)
             modified_word = original_word[:i] + original_word[i] + original_word[i:]
 
-        # replace mimics when a key neighboring the intended key is struck
+        # replace: use a neighboring keyboard key
         elif typo_type == "replace":
             i = random.randint(0, len(original_word) - 1)
             c = original_word[i].lower()
@@ -59,7 +63,7 @@ class TypoBug(Bug):
                 replacement = random.choice(KEYBOARD_NEIGHBORS[c])
                 modified_word = original_word[:i] + replacement + original_word[i+1:]
 
-        # insert mimics when a random character is struck
+        # insert: add a random character
         elif typo_type == "insert":
             i = random.randint(0, len(original_word))
             char = random.choice("abcdefghijklmnopqrstuvwxyz")
@@ -74,5 +78,5 @@ class TypoBug(Bug):
                 "original_word": original_word,
                 "modified_word": modified_word
             }
-        else:
-            return line, None
+
+        return line, None
