@@ -13,32 +13,42 @@ class FormatBug(Bug):
         if random.random() >= 1.0:  # or self.probability
             return line, None
 
-        bug_subtype = random.choice(["indentation", "spacing", "extra_blank_line"])
+        bug_subtype = random.choice(["indent_soft", "spacing", "extra_blank_line"])
         modified_line = line
 
-        # indentation mimics incorrect indentation by adding or removing spaces at the start
-        if bug_subtype == "indentation":
-            if line.startswith(" "):
-                modified_line = line.lstrip()
+        # indent_soft: mimics inconsistent indentation style
+        if bug_subtype == "indent_soft":
+            if line.startswith("    "):
+                modified_line = "  " + line[4:]
+            elif line.startswith("\t"):
+                modified_line = line.replace("\t", "    ", 1)
             else:
-                modified_line = "    " + line
+                modified_line = line
 
-        # spacing mimics inconsistent spacing by adding or removing spaces
+
+        # spacing: mimics inconsistent spacing by adding or removing spaces
         elif bug_subtype == "spacing":
-            spacing_targets = [
-                r"\s*=\s*", r"\s*\+\s*", r"\s*-\s*", r"\s*\*\s*", r"\s*/\s*", 
-                r"\s*==\s*", r"\s*,\s*", r"\s*:\s*"
-            ]
-            pattern = random.choice(spacing_targets)
+            spacing_map = {
+                r"\s*=\s*": "=",
+                r"\s*\+\s*": "+",
+                r"\s*-\s*": "-",
+                r"\s*\*\s*": "*",
+                r"\s*/\s*": "/",
+                r"\s*==\s*": "==",
+                r"\s*,\s*": ",",
+                r"\s*:\s*": ":"
+            }
+
+            pattern, operator = random.choice(list(spacing_map.items()))
 
             if re.search(pattern, line):
                 if random.random() < 0.5:
-                    modified_line = re.sub(pattern, pattern.strip(r"\s*"), line)
+                    modified_line = re.sub(pattern, operator, line)
                 else:
-                    operator = re.sub(r"[\\\s*]", "", pattern)
                     modified_line = re.sub(pattern, f" {operator} ", line)
 
-        # extra_blank_line mimics inserting an unnecessary blank line
+
+        # extra_blank_line: mimics inserting an unnecessary blank line
         elif bug_subtype == "extra_blank_line":
             return line, {
                 "bug_type": "format",
