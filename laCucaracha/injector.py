@@ -13,6 +13,7 @@ class BugInjector:
         self.bug_classes = [
             TypoBug(),
             ImportBug(),
+            FormatBug()
         ]
         self.logs = []  
 
@@ -51,6 +52,10 @@ class BugInjector:
                             if i == line_no:
                                 continue  
                             lines[i] = re.sub(rf"\b{re.escape(old)}\b", new, lines[i])
+                            
+                if diff.get("insert_blank_line_after"):
+                    lines.insert(line_no + 1, "")
+
 
         lines = [line for idx, line in enumerate(lines) if idx not in empty_line_indices]
 
