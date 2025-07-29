@@ -1,12 +1,10 @@
 Original File: example.py
-Bug Log (6 bugs):
+Bug Log (4 bugs):
 
-- Line 1: "import math" → "import math" (type: format, subtype: extra_blank_line)
-- Line 3: "import datetime" → "    import datetime" (type: format, subtype: indentation)
-- Line 5: "import sys" → "    import sys" (type: format, subtype: indentation)
-- Line 17: "    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")" → "    return datetime.datetime.now().strftime("%Y s-s %m s-s %d %H:%M:%S")" (type: format, subtype: spacing)
-- Line 29: "print(square(5))" → "    print(square(5))" (type: format, subtype: indentation)
-- Line 34: "print(f"Script name: {script_name()}")" → "print(f"Script name: {script_name()}")" (type: format, subtype: extra_blank_line)
+- Line 11: "    return x * x" → "    return x * x" (type: format, subtype: extra_blank_line)
+- Line 23: "    except FileNotFoundError:" → "    except FileNotFoundError:" (type: format, subtype: extra_blank_line)
+- Line 32: "print(f"Random choice from [1, 2, 3, 4]: {random_element([1, 2, 3, 4])}")" → "print(f"Random choice from [1, 2, 3, 4]: {random_element([1, 2, 3, 4])}")" (type: format, subtype: extra_blank_line)
+- Line 33: "print(f"Random choice from [1, 2, 3, 4]: {random_element([1, 2, 3, 4])}")" → "print(f"Random choice from [1, 2, 3, 4]: {random_element([1, 2, 3, 4])}")" (type: format, subtype: extra_blank_line)
 
 --- Original Code ---
 import math
@@ -47,11 +45,10 @@ print(f"Script name: {script_name()}")
 
 --- Modified Code ---
 import math
-
 import random
-    import datetime
+import datetime
 import os
-    import sys
+import sys
 
 def greet(name):
     return f"Hello, {name}!"
@@ -59,26 +56,29 @@ def greet(name):
 def square(x):
     return x * x
 
+
 def random_element(lst):
     return random.choice(lst)
 
 def current_time():
-    return datetime.datetime.now().strftime("%Y s-s %m s-s %d %H:%M:%S")
+    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def list_files(path="."):
     try:
         return os.listdir(path)
     except FileNotFoundError:
+
         return []
 
 def script_name():
     return sys.argv[0]
 
 print(greet("World"))
-    print(square(5))
+print(square(5))
 print(f"Square root of 16 is {math.sqrt(16)}")
 print(f"Random choice from [1, 2, 3, 4]: {random_element([1, 2, 3, 4])}")
+
+
 print(f"Current time: {current_time()}")
 print(f"Files in current directory: {list_files()}")
 print(f"Script name: {script_name()}")
-
