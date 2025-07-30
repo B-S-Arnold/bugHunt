@@ -58,14 +58,13 @@ class FormatBug(Bug):
 
         # block_indent: mimic increasing indentation for a full block (handled in injector)
         elif bug_subtype == "block_indent":
-            # Only indent if it's a valid block start
             block_starters = ("def ", "if ", "elif ", "else", "try", "with", "for ", "while ")
             safe = any(stripped.startswith(start) for start in block_starters)
 
             if not safe:
-                return line, None  # skip invalid block-indents
+                return line, None
 
-            modified_line = "    " + line  # Pre-indent starting line
+            modified_line = "    " + line
 
             return modified_line, {
                 "bug_type": "format",
@@ -73,7 +72,6 @@ class FormatBug(Bug):
                 "original_line": original_line,
                 "modified_line": modified_line
             }
-
 
         if modified_line != original_line:
             return modified_line, {

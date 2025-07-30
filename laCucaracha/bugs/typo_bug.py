@@ -32,11 +32,11 @@ class TypoBug(Bug):
             if re.fullmatch(r"(\".*?\"|'.*?'|\d+)", original_word):
                 return line, None
 
-        typo_type = random.choice(["swap", "omit", "duplicate", "replace", "insert_neighbor", "insert_random"])
+        bug_subtype = random.choice(["swap", "omit", "duplicate", "replace", "insert_neighbor", "insert_random"])
         modified_word = original_word
 
         # swap: reorder two adjacent characters
-        if typo_type == "swap" and len(original_word) >= 2:
+        if bug_subtype == "swap" and len(original_word) >= 2:
             i = random.randint(0, len(original_word) - 2)
             modified_word = (
                 original_word[:i] +
@@ -46,17 +46,17 @@ class TypoBug(Bug):
             )
 
         # omit: delete a character
-        elif typo_type == "omit":
+        elif bug_subtype == "omit":
             i = random.randint(0, len(original_word) - 1)
             modified_word = original_word[:i] + original_word[i+1:]
 
         # duplicate: repeat a character
-        elif typo_type == "duplicate":
+        elif bug_subtype == "duplicate":
             i = random.randint(0, len(original_word) - 1)
             modified_word = original_word[:i] + original_word[i] + original_word[i:]
 
         # replace: use a neighboring keyboard key instead of the intended
-        elif typo_type == "replace":
+        elif bug_subtype == "replace":
             i = random.randint(0, len(original_word) - 1)
             c = original_word[i].lower()
             if c in KEYBOARD_NEIGHBORS:
@@ -64,7 +64,7 @@ class TypoBug(Bug):
                 modified_word = original_word[:i] + replacement + original_word[i+1:]
 
         # insert_neighbor: add a neighboring character
-        elif typo_type == "insert_neighbor":
+        elif bug_subtype == "insert_neighbor":
             valid_indices = [j for j, ch in enumerate(original_word) if ch.lower() in KEYBOARD_NEIGHBORS]
             if not valid_indices:
                 return line, None
@@ -81,7 +81,7 @@ class TypoBug(Bug):
 
 
         # insert_random: add a random character
-        elif typo_type == "insert_random":
+        elif bug_subtype == "insert_random":
             i = random.randint(0, len(original_word))
             char = random.choice("abcdefghijklmnopqrstuvwxyz")
             modified_word = original_word[:i] + char + original_word[i:]
@@ -90,7 +90,7 @@ class TypoBug(Bug):
             words[idx] = modified_word
             return " ".join(words), {
                 "bug_type": "typo",
-                "bug_subtype": typo_type,
+                "bug_subtype": bug_subtype,
                 "word_index": idx,
                 "original_word": original_word,
                 "modified_word": modified_word

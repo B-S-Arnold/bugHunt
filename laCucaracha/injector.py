@@ -13,8 +13,9 @@ class BugInjector:
         self.bug_classes = [
             # TypoBug(),
             # ImportBug(),
-            FormatBug(),
+            # FormatBug(),
             # SyntaxBug(),
+            LogicBug()
         ]
         self.logs = []
 
@@ -28,13 +29,13 @@ class BugInjector:
 
         for i in range(start_index + 1, len(lines)):
             line = lines[i]
-            # Consider blank lines as part of block for indentation consistency
+
             if not line.strip():
                 block_lines.append(i)
                 continue
 
             line_indent = len(line) - len(line.lstrip(' '))
-            # Lines with greater indent than header are part of the block
+
             if line_indent > header_indent:
                 block_lines.append(i)
             else:
@@ -107,7 +108,6 @@ class BugInjector:
                 if diff.get("insert_blank_line_after"):
                     lines.insert(line_no + 1, "")
 
-        # Remove lines that became empty
         lines = [line for idx, line in enumerate(lines) if idx not in empty_line_indices]
 
         modified_code = "\n".join(lines)

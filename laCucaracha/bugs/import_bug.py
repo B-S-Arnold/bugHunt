@@ -10,7 +10,7 @@ class ImportBug(Bug):
         if not (stripped.startswith("import") or stripped.startswith("from")):
             return line, None
 
-        if random.random() >= 1.0:  # or self.probability
+        if random.random() >= 1.0:
             return line, None
 
         bug_subtype = random.choice(["comment", "remove", "swap_one", "swap_all"])
