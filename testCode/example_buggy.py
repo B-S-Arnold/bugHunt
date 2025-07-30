@@ -25,22 +25,18 @@ def list_files(path="."):
 def script_name():
     return sys.argv[0]
 
-# --- Logic Bug Triggers Below ---
 
-# bool_flip candidate
 def is_enabled():
-    return False
+    return True
 
-# comparison_swap candidate
+
 def check_equal(a, b):
     return a == b
 
-# off_by_one candidate
 def loop_demo():
     for i in range(5 + 1):
         print(i)
 
-# Call everything
 print(greet("World"))
 print(square(5))
 print(f"Square root of 16 is {math.sqrt(16)}")

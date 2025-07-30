@@ -42,13 +42,20 @@ class LogicBug(Bug):
 
         # Off-by-one errors: +1/-1 around indexing or range()
         elif bug_subtype == "off_by_one":
-            range_match = re.search(r"range\(([^)]+)\)", line)
+            range_match = re.search(r"range\(\s*([^)]+?)\s*\)", line)
             if range_match:
                 inner = range_match.group(1).strip()
-                if not any(op in inner for op in "+-*/"):
-                    modified_line = line.replace(
-                        f"range({inner})", f"range({inner} + 1)"
-                    )
+                if inner.count('(') <= 1 and inner.count(')') <= 1:
+                    if re.search(r"[\+\-]\s*1", inner):
+                        if "+1" in inner.replace(" ", ""):
+                            new_inner = re.sub(r"\+\s*1", "-1", inner)
+                        else:
+                            new_inner = re.sub(r"\-\s*1", "+1", inner)
+                    else:
+                        op = random.choice([" + 1", " - 1"])
+                        new_inner = inner + op
+
+                    modified_line = line.replace(f"range({inner})", f"range({new_inner})")
 
         if modified_line != original_line:
             return modified_line, {
