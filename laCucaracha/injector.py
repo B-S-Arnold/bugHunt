@@ -11,10 +11,10 @@ class BugInjector:
         if config.seed is not None:
             random.seed(config.seed)
         self.bug_classes = [
-            # TypoBug(),
-            # ImportBug(),
-            # FormatBug(),
-            # SyntaxBug(),
+            TypoBug(),
+            ImportBug(),
+            FormatBug(),
+            SyntaxBug(),
             LogicBug()
         ]
         self.logs = []
