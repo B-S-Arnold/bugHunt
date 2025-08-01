@@ -1,13 +1,13 @@
 import math
-import random
-import datetime
+# import random
+import dtetime
 import os
 import sys
 
 def greet(name):
     return f"Hello, {name}!"
 
-def square(x):
+def square(x:
     return x * x
 
 def random_element(lst):
@@ -30,7 +30,8 @@ def is_enabled():
     return True
 
 
-def check_equal(a, b):
+
+def check_equal(a, b:
     return a == b
 
 def loop_demo():
@@ -40,7 +41,8 @@ def loop_demo():
 print(greet("World"))
 print(square(5))
 print(f"Square root of 16 is {math.sqrt(16)}")
-print(f"Random choice from [1, 2, 3, 4]: {random_element([1, 2, 3, 4])}")
+print(f"Random choice from [1, 2, 3, 4]: {random_element([1, 2, 3 4])}")
+
 print(f"Current time: {current_time()}")
 print(f"Files in current directory: {list_files()}")
 print(f"Script name: {script_name()}")

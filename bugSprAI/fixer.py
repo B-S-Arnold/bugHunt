@@ -4,11 +4,12 @@ import difflib
 import ast
 import sys
 import pkgutil
+import builtins
 
 class BugFixer:
     def __init__(self):
         self.keywords = set(keyword.kwlist)
-        self.builtins = set(dir(__builtins__))
+        self.builtins = set(dir(builtins))
         self.stdlib_modules = set(name for _, name, _ in pkgutil.iter_modules())
         self.known_words = set()
         self.logs = []
@@ -34,6 +35,7 @@ class BugFixer:
     def update_known_words(self, code: str):
         user_defined = self.extract_user_symbols(code)
         self.known_words = self.keywords | self.builtins | self.stdlib_modules | user_defined
+        print(self.builtins)
 
 
     def fix_line(self, line: str, line_number: int) -> str:
