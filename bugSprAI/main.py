@@ -1,23 +1,30 @@
-import sys
 import os
-from bugSprAI import *
+from fixer import BugFixer
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python main.py <target_file.py>")
-        sys.exit(1)
-
-    target_file = sys.argv[1]
+def main():
+    target_file = os.path.join("..", "testCode", "example_buggy.py")
 
     with open(target_file, "r") as f:
         code = f.read()
 
     fixer = BugFixer()
-    fixed_code = fixer.fix_code(code)
+    fixed_code, logs = fixer.fix_code(code)
 
-    output_file = target_file.replace(".py", "_fixed.py")
-
-    with open(output_file, "w") as f:
+    fixed_path = target_file.replace(".py", "_fixed.py")
+    with open(fixed_path, "w") as f:
         f.write(fixed_code)
 
-    print(f"✔ Fixed code saved to {output_file}")
+    log_path = target_file + "_fix_log.txt"
+    with open(log_path, "w") as f:
+        f.write(f"Fix Log ({len(logs)} changes):\n\n")
+        for log in logs:
+            f.write(
+                f"- Line {log['line_number']}: \"{log['original']}\" → \"{log['fixed']}\" (type: {log['fix_type']})\n"
+            )
+
+    print("✅ Bug fix complete.")
+    print(f"➡️ Fixed file: {fixed_path}")
+    print(f"📝 Log: {log_path}")
+
+if __name__ == "__main__":
+    main()

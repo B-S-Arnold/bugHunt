@@ -8,6 +8,7 @@ class BugFixer:
         self.keywords = set(keyword.kwlist)
         self.builtins = set(dir(__builtins__))
         self.known_words = set()
+        self.logs = []
 
     def extract_user_symbols(self, code: str) -> set[str]:
         user_symbols = set()
@@ -31,39 +32,72 @@ class BugFixer:
         user_defined = self.extract_user_symbols(code)
         self.known_words = self.keywords | self.builtins | user_defined
 
-    def fix_line(self, line: str) -> str:
-        line = self._fix_typos(line)
-        line = self._fix_logic_bugs(line)
-        line = self._fix_formatting(line)
+    def fix_line(self, line: str, line_number: int) -> str:
+        original = line
+        line = self._fix_typos(line, line_number)
+        line = self._fix_logic_bugs(line, line_number)
+        line = self._fix_formatting(line, line_number)
         return line
 
-    def _fix_typos(self, line: str) -> str:
+    def _fix_typos(self, line: str, line_number: int) -> str:
         def replace_word(match):
             word = match.group()
             if word in self.known_words:
                 return word
             close_matches = difflib.get_close_matches(word, self.known_words, n=1, cutoff=0.85)
-            return close_matches[0] if close_matches else word
+            if close_matches:
+                self.logs.append({
+                    "line_number": line_number,
+                    "original": word,
+                    "fixed": close_matches[0],
+                    "fix_type": "typo_correction"
+                })
+                return close_matches[0]
+            return word
 
         return re.sub(r'\b\w+\b', replace_word, line)
 
-    def _fix_logic_bugs(self, line: str) -> str:
-        line = re.sub(r'!=', '==', line)
-        line = re.sub(r'>=', '<=', line)
-        line = re.sub(r'<=', '>=', line)
-        line = re.sub(r'\bTrue\b', 'False', line)
-        line = re.sub(r'\bFalse\b', 'True', line)
-        line = re.sub(r'range\(([^)]+)\s*\+\s*1\)', r'range(\1)', line)
+    def _fix_logic_bugs(self, line: str, line_number: int) -> str:
+        original = line
+        fixes = [
+            (r'!=', '=='),
+            (r'>=', '<='),
+            (r'<=', '>='),
+            (r'\bTrue\b', 'False'),
+            (r'\bFalse\b', 'True'),
+            (r'range\(([^)]+)\s*\+\s*1\)', r'range(\1)')
+        ]
+        for pattern, replacement in fixes:
+            if re.search(pattern, line):
+                fixed_line = re.sub(pattern, replacement, line)
+                self.logs.append({
+                    "line_number": line_number,
+                    "original": line.strip(),
+                    "fixed": fixed_line.strip(),
+                    "fix_type": "logic_bug_fix"
+                })
+                line = fixed_line
         return line
 
-    def _fix_formatting(self, line: str) -> str:
-        line = re.sub(r'\s*([=+\-*/<>])\s*', r' \1 ', line)
-        line = re.sub(r'\s*,\s*', ', ', line)
-        line = re.sub(r'\s*:\s*', ': ', line)
-        return line
+    def _fix_formatting(self, line: str, line_number: int) -> str:
+        original = line
+        fixed = re.sub(r'\s*([=+\-*/<>])\s*', r' \1 ', line)
+        fixed = re.sub(r'\s*,\s*', ', ', fixed)
+        fixed = re.sub(r'\s*:\s*', ': ', fixed)
+        if fixed != original:
+            self.logs.append({
+                "line_number": line_number,
+                "original": original.strip(),
+                "fixed": fixed.strip(),
+                "fix_type": "formatting"
+            })
+        return fixed
 
-    def fix_code(self, code: str) -> str:
+    def fix_code(self, code: str) -> tuple[str, list[dict]]:
+        self.logs = []
         self.update_known_words(code)
         lines = code.splitlines()
-        fixed_lines = [self.fix_line(line) for line in lines]
-        return "\n".join(fixed_lines)
+        fixed_lines = []
+        for i, line in enumerate(lines):
+            fixed_lines.append(self.fix_line(line, i + 1))
+        return "\n".join(fixed_lines), self.logs
