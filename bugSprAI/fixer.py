@@ -1,12 +1,35 @@
 import re
 import keyword
 import difflib
+import ast
 
 class BugFixer:
     def __init__(self):
         self.keywords = set(keyword.kwlist)
         self.builtins = set(dir(__builtins__))
-        self.known_words = self.keywords | self.builtins
+        self.known_words = set()
+
+    def extract_user_symbols(self, code: str) -> set[str]:
+        user_symbols = set()
+        try:
+            tree = ast.parse(code)
+            for node in ast.walk(tree):
+                if isinstance(node, ast.FunctionDef):
+                    user_symbols.add(node.name)
+                elif isinstance(node, ast.ClassDef):
+                    user_symbols.add(node.name)
+                elif isinstance(node, ast.arg):
+                    user_symbols.add(node.arg)
+                elif isinstance(node, ast.Name):
+                    user_symbols.add(node.id)
+        except SyntaxError:
+            pass  # fallback if broken code
+
+        return user_symbols
+
+    def update_known_words(self, code: str):
+        user_defined = self.extract_user_symbols(code)
+        self.known_words = self.keywords | self.builtins | user_defined
 
     def fix_line(self, line: str) -> str:
         line = self._fix_typos(line)
@@ -28,8 +51,8 @@ class BugFixer:
         line = re.sub(r'!=', '==', line)
         line = re.sub(r'>=', '<=', line)
         line = re.sub(r'<=', '>=', line)
-        line = re.sub(r'True', 'False', line)
-        line = re.sub(r'False', 'True', line)
+        line = re.sub(r'\bTrue\b', 'False', line)
+        line = re.sub(r'\bFalse\b', 'True', line)
         line = re.sub(r'range\(([^)]+)\s*\+\s*1\)', r'range(\1)', line)
         return line
 
@@ -40,6 +63,7 @@ class BugFixer:
         return line
 
     def fix_code(self, code: str) -> str:
+        self.update_known_words(code)
         lines = code.splitlines()
         fixed_lines = [self.fix_line(line) for line in lines]
         return "\n".join(fixed_lines)
