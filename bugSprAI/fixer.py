@@ -2,11 +2,14 @@ import re
 import keyword
 import difflib
 import ast
+import sys
+import pkgutil
 
 class BugFixer:
     def __init__(self):
         self.keywords = set(keyword.kwlist)
         self.builtins = set(dir(__builtins__))
+        self.stdlib_modules = set(name for _, name, _ in pkgutil.iter_modules())
         self.known_words = set()
         self.logs = []
 
@@ -24,13 +27,14 @@ class BugFixer:
                 elif isinstance(node, ast.Name):
                     user_symbols.add(node.id)
         except SyntaxError:
-            pass  # fallback if broken code
+            pass
 
         return user_symbols
 
     def update_known_words(self, code: str):
         user_defined = self.extract_user_symbols(code)
-        self.known_words = self.keywords | self.builtins | user_defined
+        self.known_words = self.keywords | self.builtins | self.stdlib_modules | user_defined
+
 
     def fix_line(self, line: str, line_number: int) -> str:
         original = line
