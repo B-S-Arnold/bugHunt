@@ -1,24 +1,30 @@
 import re
+import keyword
+import difflib
 
 class BugFixer:
+    def __init__(self):
+        self.keywords = set(keyword.kwlist)
+        self.builtins = set(dir(__builtins__))
+        self.known_words = self.keywords | self.builtins
 
     def fix_line(self, line: str) -> str:
-        """
-        Very basic rule-based fixer. Expands later.
-        """
-        # Fix common logic bugs
-        line = self._fix_logic_bugs(line)
-
-        # Fix basic formatting issues
-        line = self._fix_formatting(line)
-
-        # Fix common typos
         line = self._fix_typos(line)
-
+        line = self._fix_logic_bugs(line)
+        line = self._fix_formatting(line)
         return line
 
+    def _fix_typos(self, line: str) -> str:
+        def replace_word(match):
+            word = match.group()
+            if word in self.known_words:
+                return word
+            close_matches = difflib.get_close_matches(word, self.known_words, n=1, cutoff=0.85)
+            return close_matches[0] if close_matches else word
+
+        return re.sub(r'\b\w+\b', replace_word, line)
+
     def _fix_logic_bugs(self, line: str) -> str:
-        # Reverse logic errors
         line = re.sub(r'!=', '==', line)
         line = re.sub(r'>=', '<=', line)
         line = re.sub(r'<=', '>=', line)
@@ -28,21 +34,9 @@ class BugFixer:
         return line
 
     def _fix_formatting(self, line: str) -> str:
-        # Normalize spacing around operators
         line = re.sub(r'\s*([=+\-*/<>])\s*', r' \1 ', line)
         line = re.sub(r'\s*,\s*', ', ', line)
         line = re.sub(r'\s*:\s*', ': ', line)
-        return line
-
-    def _fix_typos(self, line: str) -> str:
-        typo_map = {
-            "pritn": "print",
-            "retrun": "return",
-            "improt": "import",
-            "defn": "def"
-        }
-        for typo, correct in typo_map.items():
-            line = re.sub(rf'\b{typo}\b', correct, line)
         return line
 
     def fix_code(self, code: str) -> str:

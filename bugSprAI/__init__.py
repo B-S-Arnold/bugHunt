@@ -1,1 +1,1 @@
-from .fixer import RuleBasedFixer
+from .fixer import BugFixer
