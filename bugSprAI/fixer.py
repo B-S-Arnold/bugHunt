@@ -44,29 +44,34 @@ class BugFixer:
         return line
 
     def _fix_unbalanced_symbols(self, line: str, line_number: int) -> str:
+        original = line
         pairs = {'(': ')', '[': ']', '{': '}'}
-        open_counts = {'(': 0, '[': 0, '{': 0}
-        close_counts = {')': 0, ']': 0, '}': 0}
+        open_stack = []
 
-        for char in line:
-            if char in open_counts:
-                open_counts[char] += 1
-            elif char in close_counts:
-                close_counts[char] += 1
+        for i, char in enumerate(line):
+            if char in pairs:
+                open_stack.append((char, i))
+            elif char in pairs.values():
+                if open_stack and pairs[open_stack[-1][0]] == char:
+                    open_stack.pop()
 
         fixed = line
-        for open_char, close_char in pairs.items():
-            diff = open_counts[open_char] - close_counts[close_char]
-            if diff > 0:
-                fixed += close_char * diff
-            elif diff < 0:
-                # Remove extra closers, if safely possible
-                fixed = re.sub(re.escape(close_char), '', fixed, count=abs(diff))
+        for open_char, index in reversed(open_stack):
+            close_char = pairs[open_char]
 
-        if fixed != line:
+            if re.match(r'^\s*(def|if|for|while|with)\b', line) and not line.strip().endswith(':'):
+                if not fixed.strip().endswith(close_char + ':'):
+                    fixed = fixed.rstrip(':')
+                    fixed += close_char + ':'
+                else:
+                    continue
+            else:
+                fixed += close_char
+
+        if fixed != original:
             self.logs.append({
                 "line_number": line_number,
-                "original": line.strip(),
+                "original": original.strip(),
                 "fixed": fixed.strip(),
                 "fix_type": "symbol_balance"
             })
