@@ -29,21 +29,49 @@ class BugFixer:
                     user_symbols.add(node.id)
         except SyntaxError:
             pass
-
         return user_symbols
 
     def update_known_words(self, code: str):
         user_defined = self.extract_user_symbols(code)
         self.known_words = self.keywords | self.builtins | self.stdlib_modules | user_defined
-        print(self.builtins)
-
 
     def fix_line(self, line: str, line_number: int) -> str:
         original = line
+        line = self._fix_unbalanced_symbols(line, line_number)
         line = self._fix_typos(line, line_number)
         line = self._fix_logic_bugs(line, line_number)
         line = self._fix_formatting(line, line_number)
         return line
+
+    def _fix_unbalanced_symbols(self, line: str, line_number: int) -> str:
+        pairs = {'(': ')', '[': ']', '{': '}'}
+        open_counts = {'(': 0, '[': 0, '{': 0}
+        close_counts = {')': 0, ']': 0, '}': 0}
+
+        for char in line:
+            if char in open_counts:
+                open_counts[char] += 1
+            elif char in close_counts:
+                close_counts[char] += 1
+
+        fixed = line
+        for open_char, close_char in pairs.items():
+            diff = open_counts[open_char] - close_counts[close_char]
+            if diff > 0:
+                fixed += close_char * diff
+            elif diff < 0:
+                # Remove extra closers, if safely possible
+                fixed = re.sub(re.escape(close_char), '', fixed, count=abs(diff))
+
+        if fixed != line:
+            self.logs.append({
+                "line_number": line_number,
+                "original": line.strip(),
+                "fixed": fixed.strip(),
+                "fix_type": "symbol_balance"
+            })
+
+        return fixed
 
     def _fix_typos(self, line: str, line_number: int) -> str:
         def replace_word(match):

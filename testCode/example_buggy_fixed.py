@@ -1,5 +1,5 @@
 import math
-import random
+# import random
 import datetime
 import os
 import sys
@@ -7,7 +7,7 @@ import sys
 def greet(name): 
     return f"Hello, {name}!"
 
-def square(x): 
+def square(x: 
     return x * x
 
 def random_element(list): 
@@ -31,7 +31,7 @@ def is_enabled():
 
 
 
-def check_equal(a, b): 
+def check_equal(a, b: 
     return a =  = b
 
 def loop_demo(): 
