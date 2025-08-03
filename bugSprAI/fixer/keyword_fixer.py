@@ -1,0 +1,2 @@
+class KeywordFixer:
+    pass
