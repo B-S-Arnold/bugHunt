@@ -37,10 +37,29 @@ class BugFixer:
 
     def fix_line(self, line: str, line_number: int) -> str:
         original = line
+        line = self._fix_keyword_typos(line, line_number)  # <- Added here
         line = self._fix_unbalanced_symbols(line, line_number)
         line = self._fix_typos(line, line_number)
         line = self._fix_logic_bugs(line, line_number)
         line = self._fix_formatting(line, line_number)
+        return line
+
+    def _fix_keyword_typos(self, line: str, line_number: int) -> str:
+        words = line.strip().split()
+        if not words:
+            return line
+        first_word = words[0]
+        if first_word not in self.keywords:
+            close = difflib.get_close_matches(first_word, self.keywords, n=1, cutoff=0.7)
+            if close:
+                fixed = line.replace(first_word, close[0], 1)
+                self.logs.append({
+                    "line_number": line_number,
+                    "original": line.strip(),
+                    "fixed": fixed.strip(),
+                    "fix_type": "keyword_typo"
+                })
+                return fixed
         return line
 
     def _fix_unbalanced_symbols(self, line: str, line_number: int) -> str:
@@ -63,8 +82,6 @@ class BugFixer:
                 if not fixed.strip().endswith(close_char + ':'):
                     fixed = fixed.rstrip(':')
                     fixed += close_char + ':'
-                else:
-                    continue
             else:
                 fixed += close_char
 
@@ -83,7 +100,7 @@ class BugFixer:
             word = match.group()
             if word in self.known_words:
                 return word
-            close_matches = difflib.get_close_matches(word, self.known_words, n=1, cutoff=0.85)
+            close_matches = difflib.get_close_matches(word, self.known_words, n=1, cutoff=0.75)  # lower cutoff
             if close_matches:
                 self.logs.append({
                     "line_number": line_number,
