@@ -1,5 +1,5 @@
 import os
-from fixer import BugFixer
+from fixers import BugFixer
 
 def main():
     target_file = os.path.join("..", "testCode", "example_buggy.py")
