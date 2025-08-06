@@ -1,5 +1,4 @@
 
-
 class BaseFixer:
     def fix_line(self, line: str, line_number: int) -> str:
         raise NotImplementedError

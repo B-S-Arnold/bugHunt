@@ -1,5 +1,5 @@
 import os
-from fixers import BugFixer
+from bugSprAI.old_fixer import BugFixer
 
 def main():
     target_file = os.path.join("..", "testCode", "example_buggy.py")
