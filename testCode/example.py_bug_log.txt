@@ -1,13 +1,12 @@
 Original File: example.py
-Bug Log (7 bugs):
+Bug Log (6 bugs):
 
-- Line 1: "math" → "maath" (type: typo, subtype: duplicate)
-- Line 13: "def" → "dwf" (type: typo, subtype: replace)
-- Line 21: "os.listdir(path)" → "os.lstdir(path)" (type: typo, subtype: omit)
-- Line 26: "    return sys.argv[0]" → "  return sys.argv[0]" (type: format, subtype: indent_soft)
-- Line 36: "def loop_demo():" → "    def loop_demo():" (type: format, subtype: block_indent)
-- Line 37: "    for i in range(5):" → "  for i in range(5):" (type: format, subtype: indent_soft)
-- Line 43: "print(f"Random choice from [1, 2, 3, 4]: {random_element([1, 2, 3, 4])}")" → "print(f"Random choice from [1, 2, 3, 4]: {random_element([1, 2, 3, 4])}")" (type: format, subtype: extra_blank_line)
+- Line 5: "import sys" → "N/A" (type: import, subtype: remove)
+- Line 8: "    return f"Hello, {name}!"" → "    return f"Hello, {name}!"" (type: format, subtype: extra_blank_line)
+- Line 14: "def" → "dwef" (type: typo, subtype: insert_neighbor)
+- Line 21: "    try:" → "        try:" (type: format, subtype: block_indent)
+- Line 37: "loop_demo():" → "loop_demi():" (type: typo, subtype: replace)
+- Line 45: "print(f"Current time: {current_time()}")" → "print(f"Current time: {current_time()}")" (type: format, subtype: extra_blank_line)
 
 --- Original Code ---
 import math
@@ -63,32 +62,32 @@ loop_demo()
 
 
 --- Modified Code ---
-import maath
+import math
 import random
 import datetime
 import os
-import sys
 
 def greet(name):
     return f"Hello, {name}!"
 
+
 def square(x):
     return x * x
 
-dwf random_element(lst):
+dwef random_element(lst):
     return random.choice(lst)
 
 def current_time():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def list_files(path="."):
-    try:
-return os.lstdir(path)
+        try:
+            return os.listdir(path)
     except FileNotFoundError:
         return []
 
 def script_name():
-  return sys.argv[0]
+    return sys.argv[0]
 
 
 def is_enabled():
@@ -98,16 +97,16 @@ def is_enabled():
 def check_equal(a, b):
     return a == b
 
-    def loop_demo():
-      for i in range(5):
-            print(i)
-    
+def loop_demi():
+    for i in range(5):
+        print(i)
+
 print(greet("World"))
 print(square(5))
 print(f"Square root of 16 is {math.sqrt(16)}")
 print(f"Random choice from [1, 2, 3, 4]: {random_element([1, 2, 3, 4])}")
-
 print(f"Current time: {current_time()}")
+
 print(f"Files in current directory: {list_files()}")
 print(f"Script name: {script_name()}")
 
