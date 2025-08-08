@@ -1,12 +1,16 @@
 Original File: example.py
-Bug Log (6 bugs):
+Bug Log (10 bugs):
 
-- Line 5: "import sys" → "N/A" (type: import, subtype: remove)
-- Line 8: "    return f"Hello, {name}!"" → "    return f"Hello, {name}!"" (type: format, subtype: extra_blank_line)
-- Line 14: "def" → "dwef" (type: typo, subtype: insert_neighbor)
-- Line 21: "    try:" → "        try:" (type: format, subtype: block_indent)
-- Line 37: "loop_demo():" → "loop_demi():" (type: typo, subtype: replace)
-- Line 45: "print(f"Current time: {current_time()}")" → "print(f"Current time: {current_time()}")" (type: format, subtype: extra_blank_line)
+- Line 1: "math" → "maht" (type: typo, subtype: swap)
+- Line 2: "random" → "raandom" (type: typo, subtype: duplicate)
+- Line 3: "import datetime" → "# import datetime" (type: import, subtype: comment)
+- Line 10: "def square(x):" → "    def square(x):" (type: format, subtype: block_indent)
+- Line 21: "return" → "rteurn" (type: typo, subtype: swap)
+- Line 22: "except" → "excepy" (type: typo, subtype: replace)
+- Line 25: "script_name():" → "script_name()v:" (type: typo, subtype: insert_random)
+- Line 29: "def" → "dref" (type: typo, subtype: insert_neighbor)
+- Line 34: "==" → "=" (type: typo, subtype: omit)
+- Line 48: "print(is_enabled())" → "print(is_enabled()" (type: syntax, subtype: unclosed_paren)
 
 --- Original Code ---
 import math
@@ -62,42 +66,42 @@ loop_demo()
 
 
 --- Modified Code ---
-import math
-import random
-import datetime
+import maht
+import raandom
+# import datetime
 import os
+import sys
 
 def greet(name):
     return f"Hello, {name}!"
 
-
-def square(x):
-    return x * x
-
-dwef random_element(lst):
+    def square(x):
+        return x * x
+    
+def random_element(lst):
     return random.choice(lst)
 
 def current_time():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def list_files(path="."):
-        try:
-            return os.listdir(path)
-    except FileNotFoundError:
+    try:
+rteurn os.listdir(path)
+excepy FileNotFoundError:
         return []
 
-def script_name():
+def script_name()v:
     return sys.argv[0]
 
 
-def is_enabled():
+dref is_enabled():
     return True
 
 
 def check_equal(a, b):
-    return a == b
+return a = b
 
-def loop_demi():
+def loop_demo():
     for i in range(5):
         print(i)
 
@@ -106,10 +110,9 @@ print(square(5))
 print(f"Square root of 16 is {math.sqrt(16)}")
 print(f"Random choice from [1, 2, 3, 4]: {random_element([1, 2, 3, 4])}")
 print(f"Current time: {current_time()}")
-
 print(f"Files in current directory: {list_files()}")
 print(f"Script name: {script_name()}")
 
-print(is_enabled())
+print(is_enabled()
 print(check_equal(10, 10))
 loop_demo()
