@@ -1,16 +1,12 @@
 Original File: example.py
-Bug Log (10 bugs):
+Bug Log (6 bugs):
 
-- Line 1: "math" → "maht" (type: typo, subtype: swap)
-- Line 2: "random" → "raandom" (type: typo, subtype: duplicate)
-- Line 3: "import datetime" → "# import datetime" (type: import, subtype: comment)
-- Line 10: "def square(x):" → "    def square(x):" (type: format, subtype: block_indent)
-- Line 21: "return" → "rteurn" (type: typo, subtype: swap)
-- Line 22: "except" → "excepy" (type: typo, subtype: replace)
-- Line 25: "script_name():" → "script_name()v:" (type: typo, subtype: insert_random)
-- Line 29: "def" → "dref" (type: typo, subtype: insert_neighbor)
-- Line 34: "==" → "=" (type: typo, subtype: omit)
-- Line 48: "print(is_enabled())" → "print(is_enabled()" (type: syntax, subtype: unclosed_paren)
+- Line 4: "import os" → "import os" (type: format, subtype: extra_blank_line)
+- Line 14: "random_element(lst):" → "random_eelement(lst):" (type: typo, subtype: insert_random)
+- Line 21: "try:" → "trgy:" (type: typo, subtype: insert_random)
+- Line 22: "        return os.listdir(path)" → "        return os.listdir(path)" (type: format, subtype: extra_blank_line)
+- Line 33: "def" → "defq" (type: typo, subtype: insert_random)
+- Line 43: "print(f"Square root of 16 is {math.sqrt(16)}")" → "print(f"Square root of 16 is {math.sqrt(16)}")" (type: format, subtype: extra_blank_line)
 
 --- Original Code ---
 import math
@@ -66,40 +62,42 @@ loop_demo()
 
 
 --- Modified Code ---
-import maht
-import raandom
-# import datetime
+import math
+import random
+import datetime
 import os
+
 import sys
 
 def greet(name):
     return f"Hello, {name}!"
 
-    def square(x):
-        return x * x
-    
-def random_element(lst):
+def square(x):
+    return x * x
+
+def random_eelement(lst):
     return random.choice(lst)
 
 def current_time():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def list_files(path="."):
-    try:
-rteurn os.listdir(path)
-excepy FileNotFoundError:
+trgy:
+        return os.listdir(path)
+
+    except FileNotFoundError:
         return []
 
-def script_name()v:
+def script_name():
     return sys.argv[0]
 
 
-dref is_enabled():
+def is_enabled():
     return True
 
 
-def check_equal(a, b):
-return a = b
+defq check_equal(a, b):
+    return a == b
 
 def loop_demo():
     for i in range(5):
@@ -108,11 +106,12 @@ def loop_demo():
 print(greet("World"))
 print(square(5))
 print(f"Square root of 16 is {math.sqrt(16)}")
+
 print(f"Random choice from [1, 2, 3, 4]: {random_element([1, 2, 3, 4])}")
 print(f"Current time: {current_time()}")
 print(f"Files in current directory: {list_files()}")
 print(f"Script name: {script_name()}")
 
-print(is_enabled()
+print(is_enabled())
 print(check_equal(10, 10))
 loop_demo()

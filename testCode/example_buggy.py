@@ -1,37 +1,39 @@
-import maht
-import raandom
-# import datetime
+import math
+import random
+import datetime
 import os
+
 import sys
 
 def greet(name):
     return f"Hello, {name}!"
 
-    def square(x):
-        return x * x
-    
-def random_element(lst):
+def square(x):
+    return x * x
+
+def random_eelement(lst):
     return random.choice(lst)
 
 def current_time():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def list_files(path="."):
-    try:
-rteurn os.listdir(path)
-excepy FileNotFoundError:
+trgy:
+        return os.listdir(path)
+
+    except FileNotFoundError:
         return []
 
-def script_name()v:
+def script_name():
     return sys.argv[0]
 
 
-dref is_enabled():
+def is_enabled():
     return True
 
 
-def check_equal(a, b):
-return a = b
+defq check_equal(a, b):
+    return a == b
 
 def loop_demo():
     for i in range(5):
@@ -40,11 +42,12 @@ def loop_demo():
 print(greet("World"))
 print(square(5))
 print(f"Square root of 16 is {math.sqrt(16)}")
+
 print(f"Random choice from [1, 2, 3, 4]: {random_element([1, 2, 3, 4])}")
 print(f"Current time: {current_time()}")
 print(f"Files in current directory: {list_files()}")
 print(f"Script name: {script_name()}")
 
-print(is_enabled()
+print(is_enabled())
 print(check_equal(10, 10))
 loop_demo()

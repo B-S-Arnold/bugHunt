@@ -5,9 +5,11 @@ class FormatFixer(BaseFixer):
     def __init__(self):
         super().__init__()
         self.block_stack = []
+        self.expected_indent = 0
 
     def fix_line(self, line: str, line_number: int) -> str:
         original = line
+
         line = self._fix_spacing(line)
         line = self._fix_missing_colon(line, line_number)
         line = self._fix_indentation(line, line_number)
@@ -43,33 +45,28 @@ class FormatFixer(BaseFixer):
 
     def _fix_indentation(self, line: str, line_number: int) -> str:
         stripped = line.strip()
+        current_indent = len(line) - len(line.lstrip())
 
         block_keywords = ('def', 'class', 'if', 'for', 'while', 'try', 'with')
         followup_keywords = ('except', 'else', 'elif', 'finally')
+        block_body_starts = ('return', 'raise', 'pass', 'break', 'continue', 'yield')
 
-        current_indent = len(line) - len(line.lstrip())
-
-        # Handle block openers (like def, try)
         if any(stripped.startswith(kw) for kw in block_keywords):
             self.block_stack.append(current_indent)
-            return line
+            self.expected_indent = current_indent + 4
+            return ' ' * current_indent + stripped
 
-        # Handle block closers (like except)
         if any(stripped.startswith(kw) for kw in followup_keywords):
             if self.block_stack:
                 expected_indent = self.block_stack[-1]
-                corrected_line = ' ' * expected_indent + stripped
-                if corrected_line != line:
-                    self.logs.append({
-                        "line_number": line_number,
-                        "original": line.rstrip(),
-                        "fixed": corrected_line.rstrip(),
-                        "fix_type": "indentation_fix"
-                    })
-                    return corrected_line
+                self.expected_indent = expected_indent + 4
+                return ' ' * expected_indent + stripped
 
-        # Clear stack on dedent
+        if any(stripped.startswith(kw) for kw in block_body_starts):
+            return ' ' * self.expected_indent + stripped
+
         if current_indent == 0 and self.block_stack:
             self.block_stack.clear()
+            self.expected_indent = 0
 
-        return line
+        return ' ' * current_indent + stripped
