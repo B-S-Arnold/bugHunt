@@ -20,7 +20,7 @@ def current_time():
 def list_files(path="."):
 trgy:
         return os.listdir(path)
-
+    
     except FileNotFoundError:
         return []
 

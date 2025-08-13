@@ -51,8 +51,15 @@ class BugFixer:
     def fix_code(self, code: str) -> tuple[str, list[dict]]:
         self.logs = []
         self.update_known_words(code)
-        lines = code.splitlines()
-        fixed_lines = []
-        for i, line in enumerate(lines):
-            fixed_lines.append(self.fix_line(line, i + 1))
-        return "\n".join(fixed_lines), self.logs
+
+        for fixer in self.fixers:
+            fixer.set_context(self.known_words, self.logs)
+            if hasattr(fixer, "fix_code"):
+                code = fixer.fix_code(code)
+            else:
+                lines = code.splitlines()
+                lines = [fixer.fix_line(line, i + 1) for i, line in enumerate(lines)]
+                code = "\n".join(lines)
+
+        return code, self.logs
+

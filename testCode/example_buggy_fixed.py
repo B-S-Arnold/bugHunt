@@ -15,14 +15,14 @@ def random_eelement(list):
     return random.choice(list)
 
 def current_time():
-    return datetime.datetime.now()._strptime("%Y - %m - %d %H: %M: %S")
+    return datetime.datetime.now()._strptime("%Y-%m-%d %H:%M:%S")
 
-def list_files(ntpath = "."):
+def list_files(ntpath="."):
 try:
     return os.listdir(ntpath)
 
-    except FileNotFoundError:
-return []
+except FileNotFoundError:
+    return []
 
 def script_name():
     return sys.argv[0]
@@ -33,11 +33,11 @@ def is_enabled():
 
 
 def check_equal(a, b):
-    return a =  = b
+    return a == b
 
 def loop_demo():
-    for i in range(5):
-        print
+for i in range(5):
+print
 
 print(greet("ord"))
 print(square(5))
