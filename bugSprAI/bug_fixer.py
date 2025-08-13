@@ -13,15 +13,18 @@ class BugFixer:
         self.known_words = set()
         self.logs = []
 
-        self.fixers = [
+        self.pre_fixers = [
             KeywordFixer(),
             SymbolFixer(),
             TypoFixer(),
             LogicFixer(),
-            FormatFixer()
+            FormatFixer(),
         ]
 
+        self.indent_fixer = IndentFixer()
+
     def extract_user_symbols(self, code: str) -> set[str]:
+        """Collects function names, class names, and variables from code."""
         user_symbols = set()
         try:
             tree = ast.parse(code)
@@ -39,20 +42,15 @@ class BugFixer:
         return user_symbols
 
     def update_known_words(self, code: str):
+        """Refresh the dictionary of known words for typo fixing."""
         user_defined = self.extract_user_symbols(code)
         self.known_words = self.keywords | self.builtins | self.stdlib_modules | user_defined
-
-    def fix_line(self, line: str, line_number: int) -> str:
-        for fixer in self.fixers:
-            fixer.set_context(self.known_words, self.logs)
-            line = fixer.fix_line(line, line_number)
-        return line
 
     def fix_code(self, code: str) -> tuple[str, list[dict]]:
         self.logs = []
         self.update_known_words(code)
 
-        for fixer in self.fixers:
+        for fixer in self.pre_fixers:
             fixer.set_context(self.known_words, self.logs)
             if hasattr(fixer, "fix_code"):
                 code = fixer.fix_code(code)
@@ -61,5 +59,7 @@ class BugFixer:
                 lines = [fixer.fix_line(line, i + 1) for i, line in enumerate(lines)]
                 code = "\n".join(lines)
 
-        return code, self.logs
+        self.indent_fixer.set_context(self.known_words, self.logs)
+        code = self.indent_fixer.fix_code(code)
 
+        return code, self.logs

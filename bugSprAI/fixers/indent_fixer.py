@@ -10,7 +10,6 @@ class IndentFixer(BaseFixer):
             # If AST parsing fails, fall back to original code
             return code
 
-        # Map line numbers to their AST depth
         indent_map = {}
         self._map_indentation(tree, depth=0, indent_map=indent_map)
 
@@ -23,7 +22,6 @@ class IndentFixer(BaseFixer):
                 fixed_lines.append("")
                 continue
 
-            # Use depth from AST if available
             depth = indent_map.get(i, 0)
             fixed_lines.append(" " * (depth * 4) + stripped)
 
@@ -35,18 +33,15 @@ class IndentFixer(BaseFixer):
         for each line of code in the node's body.
         """
         for child in ast.iter_child_nodes(node):
-            # Record the depth for the line this node starts on
             if hasattr(child, 'lineno'):
                 indent_map[child.lineno] = depth
 
-            # Determine next depth for body nodes
             if hasattr(child, 'body'):
                 for subnode in child.body:
                     if hasattr(subnode, 'lineno'):
                         indent_map[subnode.lineno] = depth + 1
                 self._map_indentation(child, depth + 1, indent_map)
 
-            # Handle orelse/except/finally bodies too
             for attr in ('orelse', 'finalbody', 'handlers'):
                 if hasattr(child, attr):
                     subbody = getattr(child, attr)

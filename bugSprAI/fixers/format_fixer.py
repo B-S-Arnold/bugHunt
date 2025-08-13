@@ -1,92 +1,70 @@
-import re
 from .base_fixer import BaseFixer
 
 class FormatFixer(BaseFixer):
     def __init__(self):
         super().__init__()
-        self.indent_stack = []  # Tracks base indent for current scope
-        self.scope_type_stack = []  # Tracks what kind of scope we're in
+        self.indent_stack = []  
+        self.scope_stack = []   
 
     def fix_code(self, code: str) -> str:
-        """Fixes indentation in a multi-line aware pass."""
         fixed_lines = []
         self.indent_stack = []
-        self.scope_type_stack = []
+        self.scope_stack = []
 
         lines = code.splitlines()
 
-        for i, line in enumerate(lines):
-            fixed_lines.append(self.fix_line(line, i + 1))
+        for line in lines:
+            fixed_lines.append(self.fix_line(line))
 
         return "\n".join(fixed_lines)
 
-    def fix_line(self, line: str, line_number: int) -> str:
-        original = line
-        stripped = line.strip()
-
+    def fix_line(self, line: str) -> str:
+        stripped = line.lstrip()
         if not stripped:
-            return stripped
+            # blank line, keep blank
+            return ""
 
-        # Common block openers
-        block_openers = ('def', 'class', 'if', 'for', 'while', 'try', 'with')
-        block_followups = ('except', 'else', 'elif', 'finally')
-        block_body_starts = ('return', 'raise', 'pass', 'break', 'continue', 'yield')
+        leading_spaces = len(line) - len(stripped)
 
-        # Check if closing a scope (dedent)
-        while self.scope_type_stack and not stripped.startswith(self.scope_type_stack[-1]):
+        while self.indent_stack and leading_spaces < self.indent_stack[-1]:
             self.indent_stack.pop()
-            self.scope_type_stack.pop()
+            self.scope_stack.pop()
 
-        # Adjust indent based on scope
-        indent_level = self.indent_stack[-1] if self.indent_stack else 0
+        block_openers = ('def', 'class', 'if', 'for', 'while', 'try', 'with')
+        block_followups = ('elif', 'else', 'except', 'finally')
+        needs_colon = False
 
-        # Detect function/class definition
-        if any(stripped.startswith(kw) for kw in ('def', 'class')):
-            if not stripped.endswith(':'):
-                stripped += ':'
-            indent_level = 0
-            self.indent_stack.append(indent_level)
-            self.scope_type_stack.append(('def' if stripped.startswith('def') else 'class'))
-            return ' ' * indent_level + stripped
+        first_word = stripped.split()[0]
 
-        # Detect block openers (inside any scope)
-        if any(stripped.startswith(kw) for kw in block_openers):
-            if not stripped.endswith(':'):
-                stripped += ':'
-            # If inside a function, increase indent by one extra tab
-            if self.scope_type_stack and self.scope_type_stack[-1] == 'def':
-                indent_level = self.indent_stack[-1] + 4
-            self.indent_stack.append(indent_level)
-            self.scope_type_stack.append(stripped.split()[0])
-            return ' ' * indent_level + stripped
-
-        # Detect follow-up blocks
-        if any(stripped.startswith(kw) for kw in block_followups):
-            if not stripped.endswith(':'):
-                stripped += ':'
-            # Match parent indent (e.g., except aligns with try)
+        if first_word in block_followups:
             if self.indent_stack:
-                indent_level = self.indent_stack[-1]
-            # If we're inside a function, shift it over one tab
-            if self.scope_type_stack and 'def' in self.scope_type_stack:
-                indent_level += 4
-            return ' ' * indent_level + stripped
+                if self.scope_stack:
+                    self.scope_stack.pop()
+                if self.indent_stack:
+                    self.indent_stack.pop()
+            expected_indent = self.indent_stack[-1] if self.indent_stack else 0
+            indent = expected_indent
+            if not stripped.endswith(':'):
+                stripped += ':'
+            self.indent_stack.append(indent)
+            self.scope_stack.append(first_word)
+            return ' ' * indent + stripped
 
-        # Detect block body statements
-        if any(stripped.startswith(kw) for kw in block_body_starts):
-            if self.scope_type_stack:
-                # One tab deeper than current scope
-                indent_level = self.indent_stack[-1] + 4
-                if 'def' in self.scope_type_stack:
-                    indent_level += 4
-            else:
-                indent_level = 4
-            return ' ' * indent_level + stripped
+        if first_word in block_openers:
+            if not stripped.endswith(':'):
+                stripped += ':'
+            indent = leading_spaces
+            self.indent_stack.append(indent + 4)
+            self.scope_stack.append(first_word)
+            return ' ' * indent + stripped
 
-        # Default case: regular statement inside scope
-        if self.scope_type_stack:
-            indent_level = self.indent_stack[-1] + 4
-            if 'def' in self.scope_type_stack:
-                indent_level += 4
+        if first_word in ('def', 'class') and not self.indent_stack:
+            if not stripped.endswith(':'):
+                stripped += ':'
+            self.indent_stack.append(4)
+            self.scope_stack.append(first_word)
+            return ' ' * 0 + stripped
 
-        return ' ' * indent_level + stripped
+        indent = self.indent_stack[-1] if self.indent_stack else 0
+
+        return ' ' * indent + stripped
