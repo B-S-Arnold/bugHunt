@@ -15,11 +15,11 @@ def random_eelement(list):
     return random.choice(list)
 
 def current_time():
-    return datetime.datetime.now()._strptime("%Y-%m-%d %H:%M:%S")
+    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-def list_files(ntpath="."):
+def list_files(path="."):
 try:
-    return os.listdir(ntpath)
+    return os.listdir(path)
 
 except FileNotFoundError:
 return []
