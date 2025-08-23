@@ -37,17 +37,19 @@ class IndentFixer(BaseFixer):
                     self._map_indentation(subnode, depth + 1, indent_map)
 
             if isinstance(child, ast.Try):
-                for subnode in getattr(child, 'handlers', []):
+                indent_map[child.lineno] = depth
+
+                for handler in child.handlers:
+                    if hasattr(handler, 'lineno'):
+                        indent_map[handler.lineno] = depth
+                    self._map_indentation(handler, depth, indent_map)
+
+                for subnode in child.orelse:
                     if hasattr(subnode, 'lineno'):
                         indent_map[subnode.lineno] = depth
                     self._map_indentation(subnode, depth, indent_map)
 
-                for subnode in getattr(child, 'orelse', []):
-                    if hasattr(subnode, 'lineno'):
-                        indent_map[subnode.lineno] = depth
-                    self._map_indentation(subnode, depth, indent_map)
-
-                for subnode in getattr(child, 'finalbody', []):
+                for subnode in child.finalbody:
                     if hasattr(subnode, 'lineno'):
                         indent_map[subnode.lineno] = depth
                     self._map_indentation(subnode, depth, indent_map)
