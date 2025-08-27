@@ -56,6 +56,7 @@ class BugFixer:
         safe_words = ["path", "strftime"]
         self.known_words.update(safe_words)
 
+        # --- First batch (high-level corrections)
         for fixer in [KeywordFixer(), LogicFixer()]:
             fixer.set_context(self.known_words, self.logs)
             if hasattr(fixer, "fix_code"):
@@ -68,7 +69,8 @@ class BugFixer:
         self.update_known_words(code)
         self.known_words.update(safe_words)
 
-        for fixer in [TypoFixer(), SymbolFixer(), FormatFixer()]:
+        # --- Second batch (typos, symbols, first format pass)
+        for fixer in [TypoFixer(), SymbolFixer()]:
             fixer.set_context(self.known_words, self.logs)
             if hasattr(fixer, "fix_code"):
                 code = fixer.fix_code(code)
@@ -77,7 +79,13 @@ class BugFixer:
                 lines = [fixer.fix_line(line, i + 1) for i, line in enumerate(lines)]
                 code = "\n".join(lines)
 
+        # --- Indentation fixer (still useful after manual formatting)
         self.indent_fixer.set_context(self.known_words, self.logs)
         code = self.indent_fixer.fix_code(code)
+
+        # --- Final AST reformat pass (best chance for perfect output)
+        final_formatter = FormatFixer()
+        final_formatter.set_context(self.known_words, self.logs)
+        code = final_formatter.fix_code(code)
 
         return code, self.logs
