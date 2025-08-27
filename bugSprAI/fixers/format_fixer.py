@@ -4,10 +4,9 @@ from .base_fixer import BaseFixer
 class FormatFixer(BaseFixer):
     def __init__(self):
         super().__init__()
-        self.used_ast = False  # track if AST succeeded
+        self.used_ast = False
 
     def fix_code(self, code: str) -> str:
-        # --- First try AST reformatting ---
         try:
             tree = ast.parse(code)
             self.used_ast = True
@@ -17,9 +16,7 @@ class FormatFixer(BaseFixer):
             return self.fallback_format(code)
 
     def fallback_format(self, code: str) -> str:
-        """Indentation fixer (only used if AST parse fails)."""
         fixed_lines = []
-        indent_stack = []
         scope_stack = []
 
         lines = code.splitlines()
@@ -32,8 +29,7 @@ class FormatFixer(BaseFixer):
 
             leading_spaces = len(line) - len(stripped)
 
-            while indent_stack and leading_spaces < indent_stack[-1]:
-                indent_stack.pop()
+            while scope_stack and leading_spaces < scope_stack[-1][1]:
                 scope_stack.pop()
 
             block_openers = ('def', 'class', 'if', 'for', 'while', 'try', 'with')
@@ -42,34 +38,28 @@ class FormatFixer(BaseFixer):
             first_word = stripped.split()[0]
 
             if first_word in block_followups:
-                if indent_stack:
-                    indent_stack.pop()
-                    indent = indent_stack[-1] if indent_stack else 0
+                if scope_stack:
+                    indent = scope_stack[-1][1]
                 else:
                     indent = 0
                 if not stripped.endswith(':'):
                     stripped += ':'
-                indent_stack.append(indent + 4)
-                scope_stack.append(first_word)
+                scope_stack.append((first_word, indent, indent + 4))
                 fixed_lines.append(' ' * indent + stripped)
                 continue
-
 
             if first_word in block_openers:
-                if indent_stack:
-                    indent_stack.pop()
-                    indent = indent_stack[-1] if indent_stack else 0
-                else:
-                    indent = 0
+                indent = leading_spaces
                 if not stripped.endswith(':'):
                     stripped += ':'
-                indent = leading_spaces
-                indent_stack.append(indent + 4)
-                scope_stack.append(first_word)
+                scope_stack.append((first_word, indent, indent + 4))
                 fixed_lines.append(' ' * indent + stripped)
                 continue
 
-            indent = indent_stack[-1] if indent_stack else 0
+            if scope_stack:
+                indent = scope_stack[-1][2]
+            else:
+                indent = 0
             fixed_lines.append(' ' * indent + stripped)
 
         return "\n".join(fixed_lines)
