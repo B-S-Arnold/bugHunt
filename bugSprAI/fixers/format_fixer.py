@@ -19,6 +19,10 @@ class FormatFixer(BaseFixer):
         fixed_lines = []
         scope_stack = []
 
+        block_openers = ('def', 'class', 'if', 'for', 'while', 'try', 'with')
+        block_followups = ('elif', 'else', 'except', 'finally')
+        body_keywords = ('return', 'raise', 'pass', 'break', 'continue', 'yield')
+
         lines = code.splitlines()
 
         for line in lines:
@@ -28,9 +32,6 @@ class FormatFixer(BaseFixer):
                 continue
 
             leading_spaces = len(line) - len(stripped)
-            block_openers = ('def', 'class', 'if', 'for', 'while', 'try', 'with')
-            block_followups = ('elif', 'else', 'except', 'finally')
-
             first_word = stripped.split()[0]
 
             while scope_stack and leading_spaces < scope_stack[-1][1]:
@@ -43,10 +44,8 @@ class FormatFixer(BaseFixer):
                         break
                 else:
                     opener_indent = 0
-
                 if not stripped.endswith(':'):
                     stripped += ':'
-
                 scope_stack.append((first_word, opener_indent, opener_indent + 4))
                 fixed_lines.append(' ' * opener_indent + stripped)
                 continue
@@ -59,14 +58,21 @@ class FormatFixer(BaseFixer):
                 else:
                     parent_body_indent = scope_stack[-1][2] if scope_stack else 0
                     opener_indent = max(leading_spaces, parent_body_indent)
-
                 body_indent = opener_indent + 4
                 scope_stack.append((first_word, opener_indent, body_indent))
                 fixed_lines.append(' ' * opener_indent + stripped)
                 continue
 
+            if first_word in body_keywords:
+                if scope_stack:
+                    indent = scope_stack[-1][2]
+                else:
+                    indent = 0
+                fixed_lines.append(' ' * indent + stripped)
+                continue
+
             if scope_stack:
-                indent = max(leading_spaces, scope_stack[-1][2])
+                indent = scope_stack[-1][2]
             else:
                 indent = leading_spaces
             fixed_lines.append(' ' * indent + stripped)
