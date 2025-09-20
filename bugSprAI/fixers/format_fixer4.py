@@ -8,17 +8,16 @@ class FormatFixer(BaseFixer):
 
     def fix_code(self, code: str) -> str:
         try:
-            # First, try AST parsing and unparsing
             tree = ast.parse(code)
             self.used_ast = True
             formatted = ast.unparse(tree)
-            
             return self._final_format_pass(formatted)
         except SyntaxError:
             self.used_ast = False
             return self.fallback_format(code)
 
     def _final_format_pass(self, code: str) -> str:
+        """Clean up any minor formatting issues from ast.unparse"""
         lines = code.splitlines()
         fixed_lines = []
         
@@ -33,6 +32,7 @@ class FormatFixer(BaseFixer):
         return '\n'.join(fixed_lines)
 
     def fallback_format(self, code: str) -> str:
+        """Fallback formatter with proper try/except handling (no debug prints)"""
         lines = code.splitlines()
         if not lines:
             return code
@@ -53,8 +53,9 @@ class FormatFixer(BaseFixer):
                 continue
             
             first_word = stripped.split()[0] if stripped else ''
+            first_word_clean = first_word.rstrip(':')
             
-            if first_word in ('except', 'finally'):
+            if first_word_clean in ('except', 'finally'):
                 try_indent_level = self._find_try_block_indent(fixed_lines)
                 current_indent = try_indent_level * 4
                 
@@ -63,7 +64,7 @@ class FormatFixer(BaseFixer):
                 
                 indent_level = try_indent_level + 1
                 
-            elif first_word in ('elif', 'else'):
+            elif first_word_clean in ('elif', 'else'):
                 if_indent_level = self._find_if_block_indent(fixed_lines)
                 current_indent = if_indent_level * 4
                 
@@ -72,7 +73,7 @@ class FormatFixer(BaseFixer):
                 
                 indent_level = if_indent_level + 1
                 
-            elif first_word in ('def', 'class'):
+            elif first_word_clean in ('def', 'class'):
                 indent_level = 0
                 current_indent = 0
                 
@@ -81,7 +82,7 @@ class FormatFixer(BaseFixer):
                 
                 indent_level = 1
                 
-            elif first_word in block_starters:
+            elif first_word_clean in block_starters:
                 current_indent = indent_level * 4
                 
                 if not stripped.endswith(':'):
@@ -92,27 +93,30 @@ class FormatFixer(BaseFixer):
             else:
                 current_indent = indent_level * 4
             
-            fixed_lines.append(' ' * current_indent + stripped)
+            final_line = ' ' * current_indent + stripped
+            fixed_lines.append(final_line)
         
         return '\n'.join(fixed_lines)
-    
-    def _find_if_block_indent(self, previous_lines: list) -> int:
-        """Find the indentation level of the matching if statement"""
-        for line in reversed(previous_lines):
-            stripped = line.strip()
-            if stripped:
-                first_word = stripped.split()[0]
-                if first_word in ('if', 'elif'):
-                    return (len(line) - len(line.lstrip())) // 4
-        return 0
-    
+
     def _find_try_block_indent(self, previous_lines: list) -> int:
         """Find the indentation level (in increments of 4) of the matching try statement"""
         for line in reversed(previous_lines):
             stripped = line.strip()
             if stripped:
-                first_word = stripped.split()[0]
+                first_word = stripped.split()[0].rstrip(':')
                 if first_word == 'try':
                     spaces = len(line) - len(line.lstrip())
-                    return spaces // 4  # Convert spaces to indent level
+                    level = spaces // 4
+                    return level
+        return 0
+
+    def _find_if_block_indent(self, previous_lines: list) -> int:
+        """Find the indentation level (in increments of 4) of the matching if statement"""
+        for line in reversed(previous_lines):
+            stripped = line.strip()
+            if stripped:
+                first_word = stripped.split()[0].rstrip(':')
+                if first_word in ('if', 'elif'):
+                    spaces = len(line) - len(line.lstrip())
+                    return spaces // 4
         return 0
