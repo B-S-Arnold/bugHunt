@@ -17,6 +17,7 @@ class FormatFixer(BaseFixer):
 
     def fallback_format(self, code: str) -> str:
         fixed_lines = []
+        # stack: (scope_type, opener_indent, body_indent)
         scope_stack = []
 
         block_openers = ('def', 'class', 'if', 'for', 'while', 'try', 'with')
@@ -34,9 +35,11 @@ class FormatFixer(BaseFixer):
             leading_spaces = len(line) - len(stripped)
             first_word = stripped.split()[0]
 
+            # Pop scopes if current line is before opener_indent
             while scope_stack and leading_spaces < scope_stack[-1][1]:
                 scope_stack.pop()
 
+            # Follow-up blocks
             if first_word in block_followups:
                 for i in range(len(scope_stack)-1, -1, -1):
                     if scope_stack[i][0] in ('if', 'for', 'while', 'try', 'with'):
@@ -50,6 +53,7 @@ class FormatFixer(BaseFixer):
                 fixed_lines.append(' ' * opener_indent + stripped)
                 continue
 
+            # Block openers
             if first_word in block_openers:
                 if not stripped.endswith(':'):
                     stripped += ':'
@@ -63,18 +67,19 @@ class FormatFixer(BaseFixer):
                 fixed_lines.append(' ' * opener_indent + stripped)
                 continue
 
+            # Body lines (return, raise, pass, etc.)
             if first_word in body_keywords:
-                if scope_stack:
-                    indent = scope_stack[-1][2]
-                else:
-                    indent = 0
+                indent = scope_stack[-1][2] if scope_stack else 0
                 fixed_lines.append(' ' * indent + stripped)
                 continue
 
+            # General statements
             if scope_stack:
+                # If last thing was a block opener, this belongs inside
                 indent = scope_stack[-1][2]
             else:
-                indent = leading_spaces
+                # Otherwise, stay at the same level
+                indent = 0
             fixed_lines.append(' ' * indent + stripped)
 
         return "\n".join(fixed_lines)
