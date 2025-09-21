@@ -10,76 +10,121 @@ class FormatFixer(BaseFixer):
         try:
             tree = ast.parse(code)
             self.used_ast = True
-            return ast.unparse(tree)
+            formatted = ast.unparse(tree)
+            return self._final_format_pass(formatted)
         except SyntaxError:
             self.used_ast = False
             return self.fallback_format(code)
 
-    def fallback_format(self, code: str) -> str:
-        fixed_lines = []
-        # stack: (scope_type, opener_indent, body_indent)
-        scope_stack = []
-
-        block_openers = ('def', 'class', 'if', 'for', 'while', 'try', 'with')
-        block_followups = ('elif', 'else', 'except', 'finally')
-        body_keywords = ('return', 'raise', 'pass', 'break', 'continue', 'yield')
-
+    def _final_format_pass(self, code: str) -> str:
+        """Clean up any minor formatting issues from ast.unparse"""
         lines = code.splitlines()
-
+        fixed_lines = []
+        
         for line in lines:
-            stripped = line.lstrip()
-            if not stripped:
-                fixed_lines.append("")
-                continue
-
-            leading_spaces = len(line) - len(stripped)
-            first_word = stripped.split()[0]
-
-            # Pop scopes if current line is before opener_indent
-            while scope_stack and leading_spaces < scope_stack[-1][1]:
-                scope_stack.pop()
-
-            # Follow-up blocks
-            if first_word in block_followups:
-                for i in range(len(scope_stack)-1, -1, -1):
-                    if scope_stack[i][0] in ('if', 'for', 'while', 'try', 'with'):
-                        opener_indent = scope_stack[i][1]
-                        break
-                else:
-                    opener_indent = 0
-                if not stripped.endswith(':'):
-                    stripped += ':'
-                scope_stack.append((first_word, opener_indent, opener_indent + 4))
-                fixed_lines.append(' ' * opener_indent + stripped)
-                continue
-
-            # Block openers
-            if first_word in block_openers:
-                if not stripped.endswith(':'):
-                    stripped += ':'
-                if first_word in ('def', 'class'):
-                    opener_indent = 0
-                else:
-                    parent_body_indent = scope_stack[-1][2] if scope_stack else 0
-                    opener_indent = max(leading_spaces, parent_body_indent)
-                body_indent = opener_indent + 4
-                scope_stack.append((first_word, opener_indent, body_indent))
-                fixed_lines.append(' ' * opener_indent + stripped)
-                continue
-
-            # Body lines (return, raise, pass, etc.)
-            if first_word in body_keywords:
-                indent = scope_stack[-1][2] if scope_stack else 0
-                fixed_lines.append(' ' * indent + stripped)
-                continue
-
-            # General statements
-            if scope_stack:
-                # If last thing was a block opener, this belongs inside
-                indent = scope_stack[-1][2]
+            if line.strip():
+                leading_spaces = len(line) - len(line.lstrip())
+                cleaned_content = ' '.join(line.strip().split())
+                fixed_lines.append(' ' * leading_spaces + cleaned_content)
             else:
-                # Otherwise, stay at the same level
-                indent = 0
-            fixed_lines.append(' ' * indent + stripped)
+                fixed_lines.append('')
+        
+        return '\n'.join(fixed_lines)
 
-        return "\n".join(fixed_lines)
+    def fallback_format(self, code: str) -> str:
+        """Fallback formatter with proper scope tracking"""
+        lines = code.splitlines()
+        if not lines:
+            return code
+            
+        fixed_lines = []
+        indent_stack = [0]  # Stack of indentation levels
+        
+        block_starters = {
+            'def', 'class', 'if', 'elif', 'else', 'for', 'while', 
+            'try', 'except', 'finally', 'with', 'match', 'case'
+        }
+        
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            
+            if not stripped:
+                fixed_lines.append('')
+                continue
+            
+            first_word = stripped.split()[0] if stripped else ''
+            first_word_clean = first_word.rstrip(':')
+            
+            # Calculate what the current indentation should be based on content
+            expected_indent = self._calculate_expected_indent(
+                first_word_clean, fixed_lines, indent_stack
+            )
+            
+            # Update the indent stack based on the expected indentation
+            self._update_indent_stack(expected_indent, indent_stack)
+            
+            # Add colon if missing for block starters
+            if first_word_clean in block_starters and not stripped.endswith(':'):
+                stripped += ':'
+            
+            # Apply indentation
+            current_indent = expected_indent * 4
+            final_line = ' ' * current_indent + stripped
+            fixed_lines.append(final_line)
+            
+            # If this line starts a new block, prepare for indented content
+            if first_word_clean in block_starters:
+                indent_stack.append(expected_indent + 1)
+        
+        return '\n'.join(fixed_lines)
+
+    def _calculate_expected_indent(self, first_word_clean: str, previous_lines: list, indent_stack: list) -> int:
+        """Calculate the expected indentation level for a line"""
+        
+        # Special cases that align with their matching blocks
+        if first_word_clean in ('except', 'finally'):
+            return self._find_try_block_indent(previous_lines)
+        elif first_word_clean in ('elif', 'else'):
+            return self._find_if_block_indent(previous_lines)
+        elif first_word_clean in ('def', 'class'):
+            return 0  # Top-level
+        elif first_word_clean in {'def', 'class', 'if', 'elif', 'else', 'for', 'while', 
+                                  'try', 'except', 'finally', 'with', 'match', 'case'}:
+            # Other block starters use current level
+            return indent_stack[-1] if indent_stack else 0
+        else:
+            # Regular statements use current level
+            return indent_stack[-1] if indent_stack else 0
+
+    def _update_indent_stack(self, expected_indent: int, indent_stack: list):
+        """Update the indent stack to match the expected indentation level"""
+        # Pop levels that are deeper than our expected level
+        while len(indent_stack) > 1 and indent_stack[-1] > expected_indent:
+            indent_stack.pop()
+        
+        # If we're at a different level than expected, adjust
+        if indent_stack and indent_stack[-1] != expected_indent:
+            indent_stack[-1] = expected_indent
+
+    def _find_try_block_indent(self, previous_lines: list) -> int:
+        """Find the indentation level (in increments of 4) of the matching try statement"""
+        for line in reversed(previous_lines):
+            stripped = line.strip()
+            if stripped:
+                first_word = stripped.split()[0].rstrip(':')  # Remove colon
+                if first_word == 'try':
+                    spaces = len(line) - len(line.lstrip())
+                    level = spaces // 4
+                    return level
+        return 0
+
+    def _find_if_block_indent(self, previous_lines: list) -> int:
+        """Find the indentation level (in increments of 4) of the matching if statement"""
+        for line in reversed(previous_lines):
+            stripped = line.strip()
+            if stripped:
+                first_word = stripped.split()[0].rstrip(':')  # Remove colon
+                if first_word in ('if', 'elif'):
+                    spaces = len(line) - len(line.lstrip())
+                    return spaces // 4
+        return 0
